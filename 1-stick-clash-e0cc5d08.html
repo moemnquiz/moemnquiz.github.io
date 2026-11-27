@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>حرب العصيان</title>
+<style>
+html,body{margin:0;height:100%;background:#111;overflow:hidden;touch-action:none;font-family:sans-serif;user-select:none}
+canvas{display:block;width:100vw;height:100vh}
+#ui{position:fixed;left:0;right:0;bottom:0;display:flex;gap:4px;padding:4px;flex-wrap:wrap;justify-content:center}
+button{font-size:15px;padding:8px 10px;border:2px solid #fff6;border-radius:10px;background:#2a3a55;color:#fff}
+button:active{background:#58a}
+#top{position:fixed;top:4px;left:0;right:0;text-align:center;color:#ffd84a;font-weight:bold;font-size:20px;text-shadow:0 0 4px #000;pointer-events:none}
+#msg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:#000a;color:#fff;font-size:34px;gap:20px}
+</style></head><body>
+<canvas id="c"></canvas>
+<div id="top"></div>
+<div id="ui">
+<button onclick="buy('miner')">⛏ عامل 150</button>
+<button onclick="buy('sword')">🗡 سيّاف 200</button>
+<button onclick="buy('archer')">🏹 رامي 300</button>
+<button onclick="buy('giant')">💪 عملاق 1000</button>
+<button onclick="cmd('atk')">⚔ هجوم</button>
+<button onclick="cmd('def')">🛡 دفاع</button>
+<button onclick="upg()" id="ub">⬆ تطوير 2000</button>
+</div>
+<div id="msg"><div id="mt"></div><button onclick="start()" style="font-size:26px">العب تاني</button></div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H,G;const WORLD=3200,PB=150,EB=WORLD-150,MINE=520,EMINE=WORLD-520;
+function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;G=H*0.72}
+addEventListener('resize',rs);rs();
+const T={miner:{hp:60,sp:1.3,cost:150,r:12,dmg:0,col:'#ffd84a'},
+sword:{hp:140,sp:1.6,cost:200,r:16,dmg:12,cd:30,col:'#4af'},
+archer:{hp:80,sp:1.3,cost:300,r:220,dmg:9,cd:55,col:'#6e6'},
+giant:{hp:900,sp:0.9,cost:1000,r:34,dmg:55,cd:50,col:'#c6f'}};
+let S,cam,mode,lvl;
+function start(){let save=+localStorage.getItem('sc_gold')||0;
+S={gold:5000+save,egold:3000,u:[],arrows:[],pst:{hp:3000,x:PB},est:{hp:3000+0,x:EB},t:0,over:false,etimer:0};
+cam=0;mode='atk';lvl=1;document.getElementById('msg').style.display='none';
+for(let i=0;i<3;i++)spawn('miner',0);spawn('sword',0);spawn('sword',0);
+for(let i=0;i<3;i++)spawn('miner',1);}
+function spawn(k,side){const t=T[k];let m=1+(side==0?(lvl-1)*0.25:Math.min(S.t/18000,2));
+S.u.push({k,side,x:side==0?PB+40:EB-40,hp:t.hp*m,mhp:t.hp*m,cd:0,carry:0,st:0,dm:t.dmg*m,off:Math.random()*20-10})}
+function buy(k){if(S.over)return;if(S.gold>=T[k].cost){S.gold-=T[k].cost;spawn(k,0)}}
+function cmd(m){mode=m}
+function upg(){let c=lvl*2000;if(S.gold>=c){S.gold-=c;lvl++;S.pst.hp=Math.min(S.pst.hp+1000,6000);S.u.forEach(u=>{if(u.side==0){u.hp+=30;u.mhp+=30;u.dm*=1.1}})}}
+let dragX=null;
+cv.addEventListener('touchstart',e=>{dragX=e.touches[0].clientX},{passive:true});
+cv.addEventListener('touchmove',e=>{let x=e.touches[0].clientX;cam-=(x-dragX)*-1*-1;cam=Math.max(0,Math.min(WORLD-W,cam));dragX=x},{passive:true});
+cv.addEventListener('mousedown',e=>{dragX=e.clientX});
+addEventListener('mouseup',()=>dragX=null);
+cv.addEventListener('mousemove',e=>{if(dragX!=null){cam-=(e.clientX-dragX);cam=Math.max(0,Math.min(WORLD-W,cam));dragX=e.clientX}});
+function enemyAI(){S.etimer++;S.egold+=0.25+S.t/60000;
+if(S.etimer%Math.max(120,360-S.t/40)==0){let r=Math.random(),e=S.egold;
+let k=r<.15&&e>1000?'giant':r<.5&&e>300?'archer':e>200?'sword':null;
+if(k&&e>=T[k].cost){S.egold-=T[k].cost;spawn(k,1)}}
+let m=S.u.filter(u=>u.side==1&&u.k=='miner').length;if(m<3&&S.egold>150){S.egold-=150;spawn('miner',1)}}
+function step(){if(S.over)return;S.t++;enemyAI();
+for(const u of S.u){const t=T[u.k];const dir=u.side==0?1:-1;if(u.cd>0)u.cd--;
+if(u.k=='miner'){const mx=u.side==0?MINE:EMINE,bx=u.side==0?PB:EB;
+if(u.carry>0){let d=bx-u.x;if(Math.abs(d)<30){if(u.side==0)S.gold+=u.carry*3;else S.egold+=u.carry;u.carry=0}else u.x+=Math.sign(d)*t.sp}
+else{let d=mx-u.x;if(Math.abs(d)<10){u.st++;if(u.st>60){u.carry=60;u.st=0}}else u.x+=Math.sign(d)*t.sp}
+continue}
+let tg=null,bd=1e9;for(const o of S.u){if(o.side!=u.side&&o.hp>0&&o.k!='miner'||o.side!=u.side&&o.hp>0){let d=Math.abs(o.x-u.x);if(o.k=='miner')d+=150;if(d<bd){bd=d;tg=o}}}
+let st=u.side==0?S.est:S.pst;let sd=Math.abs(st.x-u.x);
+let rng=u.k=='archer'?t.r:t.r+10;
+let hold=u.side==0&&mode=='def';
+let ax=u.side==0?(hold?PB+250+u.off*4:1e9):-1e9;
+if(tg&&Math.abs(tg.x-u.x)<rng){ if(u.cd==0){u.cd=t.cd;if(u.k=='archer')S.arrows.push({x:u.x,y:0,tx:tg.x,t:tg,d:u.dm,s:u.side,l:0});else tg.hp-=u.dm}}
+else if(sd<rng+20&&!hold){if(u.cd==0){u.cd=t.cd;st.hp-=u.dm*(u.k=='archer'?.5:1)}}
+else{let seek=tg&&Math.abs(tg.x-u.x)<(hold?350:600);
+if(u.side==0&&hold&&!seek){if(u.x>PB+250+u.off*4)u.x-=t.sp;else if(u.x<PB+240+u.off*4)u.x+=t.sp}
+else u.x+=dir*t.sp*(u.side==1&&!seek&&sd>0?1:1)}
+u.x=Math.max(PB-30,Math.min(EB+30,u.x))}
+for(const a of S.arrows){a.l++;a.x+=(a.tx-a.x)*0.12;if(a.l>10){if(a.t.hp>0)a.t.hp-=a.d;a.dead=1}}
+S.arrows=S.arrows.filter(a=>!a.dead);
+S.u=S.u.filter(u=>{if(u.hp<=0&&u.side==1)S.gold+=T[u.k].cost*0.5;return u.hp>0});
+// separation
+if(S.pst.hp<=0||S.est.hp<=0){S.over=true;let w=S.est.hp<=0;if(w)localStorage.setItem('sc_gold',Math.min(1e7,Math.floor(S.gold/2)));
+document.getElementById('mt').textContent=w?'🏆 كسبت! دمرت التمثال':'💀 خسرت';document.getElementById('msg').style.display='flex'}}
+function stick(x,y,col,k,side,u){const dr=side==0?1:-1;ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=k=='giant'?6:3;
+let s=k=='giant'?1.8:1,w=Math.sin(S.t*0.3+x)*6*s;
+ctx.beginPath();ctx.arc(x,y-34*s,7*s,0,7);ctx.fill();
+ctx.beginPath();ctx.moveTo(x,y-27*s);ctx.lineTo(x,y-12*s);ctx.moveTo(x,y-12*s);ctx.lineTo(x-w,y);ctx.moveTo(x,y-12*s);ctx.lineTo(x+w,y);
+ctx.moveTo(x,y-22*s);ctx.lineTo(x+dr*12*s,y-16*s+(u.cd>0?-8:0));ctx.stroke();
+if(k=='sword'||k=='giant'){ctx.strokeStyle='#ddd';ctx.beginPath();ctx.moveTo(x+dr*12*s,y-16*s);ctx.lineTo(x+dr*(22+(u.cd>0?10:0))*s,y-30*s);ctx.stroke()}
+if(k=='archer'){ctx.strokeStyle='#a73';ctx.beginPath();ctx.arc(x+dr*12,y-18,10,-1.2,1.2);ctx.stroke()}
+if(k=='miner'){ctx.strokeStyle='#999';ctx.beginPath();ctx.moveTo(x+dr*12,y-16);ctx.lineTo(x+dr*20,y-28);ctx.stroke();if(u.carry){ctx.fillStyle='#fd3';ctx.fillRect(x-4,y-26,8,8)}}
+const f=u.hp/u.mhp;ctx.fillStyle='#400';ctx.fillRect(x-12,y-50*s,24,3);ctx.fillStyle=side==0?'#4f4':'#f44';ctx.fillRect(x-12,y-50*s,24*f,3)}
+function statue(x,hp,col,mx){ctx.fillStyle=col;ctx.fillRect(x-25,G-90,50,90);ctx.beginPath();ctx.arc(x,G-110,22,0,7);ctx.fill();ctx.fillStyle='#000a';ctx.fillRect(x-35,G-150,70,6);ctx.fillStyle='#fc3';ctx.fillRect(x-35,G-150,70*Math.max(0,hp/mx),6)}
+function mine(x){ctx.fillStyle='#665';ctx.beginPath();ctx.moveTo(x-40,G);ctx.lineTo(x-15,G-45);ctx.lineTo(x+15,G-40);ctx.lineTo(x+40,G);ctx.fill();ctx.fillStyle='#fd3';for(let i=0;i<4;i++)ctx.fillRect(x-20+i*11,G-12-(i%2)*14,7,7)}
+function draw(){const sky=ctx.createLinearGradient(0,0,0,G);sky.addColorStop(0,'#5ac');sky.addColorStop(1,'#bde');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+ctx.fillStyle='#8a9';for(let i=0;i<8;i++){let mx=i*500-cam*0.3;ctx.beginPath();ctx.moveTo(mx,G);ctx.lineTo(mx+250,G-170);ctx.lineTo(mx+500,G);ctx.fill()}
+ctx.fillStyle='#4a3';ctx.fillRect(0,G,W,H-G);ctx.fillStyle='#6c4';ctx.fillRect(0,G,W,6);
+ctx.save();ctx.translate(-cam,0);
+mine(MINE);mine(EMINE);statue(PB,S.pst.hp,'#39f',6000);statue(EB,S.est.hp,'#f44',3000);
+for(const u of S.u)stick(u.x,G+2,u.side==0?T[u.k].col:'#e55',u.k,u.side,u);
+ctx.strokeStyle='#432';ctx.lineWidth=2;for(const a of S.arrows){ctx.beginPath();ctx.moveTo(a.x,G-30-Math.sin(a.l/10*3)*30);ctx.lineTo(a.x+(a.s==0?8:-8),G-30-Math.sin(a.l/10*3)*30);ctx.stroke()}
+ctx.restore();
+// minimap
+ctx.fillStyle='#0008';ctx.fillRect(W/2-100,34,200,10);for(const u of S.u){ctx.fillStyle=u.side==0?'#4af':'#f55';ctx.fillRect(W/2-100+u.x/WORLD*200,34,3,10)}
+ctx.strokeStyle='#fff';ctx.strokeRect(W/2-100+cam/WORLD*200,33,W/WORLD*200,12);
+document.getElementById('top').textContent='💰 '+Math.floor(S.gold)+'  |  مستوى '+lvl+'  |  '+(mode=='atk'?'هجوم':'دفاع');
+document.getElementById('ub').textContent='⬆ تطوير '+lvl*2000}
+function loop(){step();draw();requestAnimationFrame(loop)}
+start();loop();
+</script></body></html>
