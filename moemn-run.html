@@ -195,7 +195,7 @@ function resize(){
   cv.style.width = W + 'px'; cv.style.height = H + 'px';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   horizon = H * 0.34;
-  baseY = H * 1.08;
+  baseY = H * 0.99;
   cx = W / 2;
   ROAD = W * 0.40;
   grassGrad = ctx.createLinearGradient(0, horizon, 0, H);
@@ -295,6 +295,8 @@ function drawGround(){
   }
   ctx.closePath();
   ctx.fillStyle = roadGrad; ctx.fill();
+  var nearY = yOf(0);
+  if (nearY < H) ctx.fillRect(0, nearY - 1, W, H - nearY + 1);
 
   // road edge stripes
   ctx.strokeStyle = 'rgba(255,255,255,.35)';
@@ -785,7 +787,6 @@ function update(dt){
   for (var i = G.objs.length - 1; i >= 0; i--){
     var o = G.objs[i];
     o.z -= G.speed * dt;
-    if (o.z < -4){ G.objs.splice(i, 1); continue; }
     if (!o.done && o.z <= PZ){
       o.done = true;
       if (o.lane === P.lane){
@@ -794,6 +795,7 @@ function update(dt){
         } else collide(o);
       }
     }
+    if (o.z < PZ - 0.2){ G.objs.splice(i, 1); continue; }
   }
   spawnAhead();
 }
