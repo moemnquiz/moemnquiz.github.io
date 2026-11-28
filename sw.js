@@ -1,13 +1,17 @@
 /* moemn quiz - offline service worker */
-var VERSION = 'mq-v1';
+var VERSION = 'mq-v2';
 var SHELL = [
   '/',
   '/index.html',
   '/app.js',
   '/app.css',
   '/manifest.webmanifest',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/10-icon-192.png',
+  '/11-icon-512.png',
+  '/stick-clash-app.html',
+  '/stickclash.webmanifest',
+  '/8-icon-game-192.png',
+  '/9-icon-game-512.png',
   '/1-stick-clash-3d.html'
 ];
 
