@@ -70,6 +70,8 @@
   .go:active{transform:translateY(3px);box-shadow:0 3px 0 #14702c}
   .hint{color:#a9c79c;font-size:14px;line-height:1.8;margin-top:4px}
   .hint b{color:#ffe066}
+  .go.ghost{background:linear-gradient(#5c6b62,#3b4740);box-shadow:0 6px 0 #26302a,0 12px 22px #0007;
+    font-size:17px;padding:11px 26px;margin-top:10px}
   #fade{position:fixed;inset:0;z-index:45;background:#000;opacity:0;pointer-events:none;
     transition:opacity .28s ease}
   #skinOv .wallet{background:#ffffff1c;border:1px solid #ffffff33;border-radius:999px;
@@ -164,6 +166,7 @@
   <div class="chip">أفضل نتيجة <b id="bestStart">0</b></div>
   <button class="go" id="bStart">يلا نبدأ</button>
   <button class="go" id="bSkins2" style="background:linear-gradient(#8a7cf0,#5a4bd0);box-shadow:0 6px 0 #3a2f96,0 12px 22px #0008;font-size:18px;padding:12px 30px">🎨 الملابس</button>
+  <button class="go ghost" id="bExit2">🚪 خروج</button>
 </div>
 
 <div class="ov" id="overOv">
@@ -187,6 +190,7 @@
 <div class="ov" id="pauseOv">
   <h1>واقف شوية</h1>
   <button class="go" id="bResume">كمّل</button>
+  <button class="go ghost" id="bExit">🚪 خروج من اللعبة</button>
 </div>
 
 <div id="fade"></div>
@@ -427,6 +431,8 @@ function rr(c, x, y, w, h, r){
 }
 
 /* ===================== objects ===================== */
+var WARM_Z = 56;              /* metres of clear road at the start of every run */
+var OBSZ = 0.8;               /* obstacle visuals are drawn 20% smaller */
 var OBS = {
   hay:  { h: 0.52, dodge: 'jump' },
   gate: { h: 1.05, dodge: 'slide' },
@@ -460,7 +466,7 @@ function drawHay(o){
   var u = unitOf(o.z);
   if (u < 1) return;
   var x = xOf(o.lane - 1, o.z), y = yOf(o.z);
-  var w = u * 0.72, h = u * 0.5;
+  var w = u * 0.72 * OBSZ, h = u * 0.5 * OBSZ;
   // shadow
   ctx.fillStyle = 'rgba(0,0,0,.22)';
   ctx.beginPath(); ctx.ellipse(x, y, w * 0.55, h * 0.2, 0, 0, 7); ctx.fill();
@@ -488,7 +494,7 @@ function drawGate(o){
   var u = unitOf(o.z);
   if (u < 1) return;
   var x = xOf(o.lane - 1, o.z), y = yOf(o.z);
-  var w = u * 0.92, top = y - u * 1.0, bot = y - u * 0.66;
+  var w = u * 0.92 * OBSZ, top = y - u * 1.0 * OBSZ, bot = y - u * 0.66 * OBSZ;
   // posts
   ctx.fillStyle = '#7a5432';
   var pw2 = Math.max(1.6, u * 0.055);
@@ -519,7 +525,7 @@ function drawRock(o){
   var u = unitOf(o.z);
   if (u < 1) return;
   var x = xOf(o.lane - 1, o.z), y = yOf(o.z);
-  var w = u * 0.7, h = u * 0.9;
+  var w = u * 0.7 * OBSZ, h = u * 0.9 * OBSZ;
   ctx.fillStyle = 'rgba(0,0,0,.22)';
   ctx.beginPath(); ctx.ellipse(x, y, w * 0.6, h * 0.13, 0, 0, 7); ctx.fill();
   ctx.fillStyle = '#78828c';
@@ -747,7 +753,7 @@ var G = {
   t: 0, speed: SPEED0, dist: 0, coins: 0,
   objs: [], nextZ: 40,
   best: 0, bestCoins: 0,
-  wallet: 0, owned: ['farmer'], skin: 'farmer', pausedForSkins: false
+  wallet: 50, owned: ['farmer'], skin: 'farmer', pausedForSkins: false
 };
 var P = { lane: 1, x: 0, jumpY: 0, vy: 0, sliding: 0, stride: 0, air: false, tilt: 0, slideAnim: 0, land: 0 };
 
@@ -765,6 +771,9 @@ function spawnAhead(){
     var z = G.nextZ;
     var coinGap = Math.max(2.0, G.speed * 0.125);
     var r = Math.random();
+    /* warm-up: no obstacles or hay bales for the first stretch of a run,
+       only coins, so the player gets a clear road to find their feet */
+    if (z < WARM_Z) r = 0.12;
     var lanes = [0, 1, 2];
     if (r < 0.28){
       var ln = pick(lanes), n = 4 + ((Math.random() * 3) | 0);
@@ -1114,7 +1123,14 @@ function saveProgress(){
 }
 function loadProgress(){
   try {
-    G.wallet = parseInt(localStorage.getItem('moemnrun_wallet') || '0', 10) || 0;
+    var savedWallet = localStorage.getItem('moemnrun_wallet');
+    G.wallet = savedWallet === null ? 50 : (parseInt(savedWallet, 10) || 0);
+    /* one-time welcome balance so a fresh or near-empty wallet starts at 50 coins */
+    if (G.wallet < 50 && localStorage.getItem('moemnrun_welcome50') !== '1'){
+      G.wallet = 50;
+      localStorage.setItem('moemnrun_welcome50', '1');
+      saveProgress();
+    }
     var o = localStorage.getItem('moemnrun_owned');
     if (o) G.owned = o.split(',').filter(function(x){ return !!x; });
     if (G.owned.indexOf('farmer') < 0) G.owned.push('farmer');
@@ -1243,6 +1259,26 @@ function toggleMute(){
   if (muted) musicStop(); else if (G.state === 'run') musicStart();
   syncMute();
 }
+function exitGame(){
+  musicStop();
+  saveProgress();
+  /* inside the APK the native bridge closes the app; in a browser tab fall
+     back to closing the tab, or going back if the tab was not opened by script */
+  try {
+    if (window.MoemnApp && typeof window.MoemnApp.exit === 'function'){
+      window.MoemnApp.exit();
+      return;
+    }
+  } catch(e){}
+  try { window.close(); } catch(e){}
+  setTimeout(function(){
+    try {
+      if (document.hidden) return;
+      if (window.history && window.history.length > 1) window.history.back();
+    } catch(e){}
+  }, 300);
+}
+
 function togglePause(){
   if (G.state === 'run'){
     G.state = 'pause';
@@ -1263,6 +1299,8 @@ document.getElementById('bResume').addEventListener('click', function(e){ e.stop
 document.getElementById('bSkins').addEventListener('click', function(e){ e.stopPropagation(); openSkins(); });
 document.getElementById('bSkins2').addEventListener('click', function(e){ e.stopPropagation(); openSkins(); });
 document.getElementById('bCloseSkins').addEventListener('click', function(e){ e.stopPropagation(); closeSkins(); });
+document.getElementById('bExit').addEventListener('click', function(e){ e.stopPropagation(); exitGame(); });
+document.getElementById('bExit2').addEventListener('click', function(e){ e.stopPropagation(); exitGame(); });
 
 document.addEventListener('visibilitychange', function(){
   if (document.hidden && G.state === 'run') togglePause();
@@ -1296,7 +1334,7 @@ function init(){
   G.state = 'ready';
   requestAnimationFrame(frame);
 }
-window.__moemnrun = { G: G, P: P, start: startGame, update: update, move: move, jump: jump, slide: slide, render: render, spawnAhead: spawnAhead };
+window.__moemnrun = { G: G, P: P, start: startGame, update: update, move: move, jump: jump, slide: slide, render: render, spawnAhead: spawnAhead, exit: exitGame };
 init();
 })();
 </script>
