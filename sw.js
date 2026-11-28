@@ -1,5 +1,5 @@
 /* moemn quiz - offline service worker */
-var VERSION = 'mq-v9';
+var VERSION = 'mq-v10';
 var SHELL = [
   '/',
   '/index.html',
