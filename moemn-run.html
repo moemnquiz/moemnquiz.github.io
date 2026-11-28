@@ -756,7 +756,8 @@ var G = {
   best: 0, bestCoins: 0,
   wallet: 50, owned: ['farmer'], skin: 'farmer', pausedForSkins: false
 };
-var P = { lane: 1, x: 0, jumpY: 0, vy: 0, sliding: 0, stride: 0, air: false, tilt: 0, slideAnim: 0, land: 0 };
+var P = { lane: 1, x: 0, jumpY: 0, vy: 0, sliding: 0, stride: 0, air: false, tilt: 0, slideAnim: 0, land: 0,
+          jumpT: 99, slideT: 99 };
 
 try { G.best = parseInt(localStorage.getItem('moemnrun_best') || '0', 10) || 0; } catch(e){}
 try { G.bestCoins = parseInt(localStorage.getItem('moemnrun_coins') || '0', 10) || 0; } catch(e){}
@@ -802,6 +803,7 @@ function spawnAhead(){
 function resetGame(){
   G.objs = []; G.nextZ = 34; G.speed = SPEED0; G.dist = 0; G.coins = 0; G.t = 0;
   P.lane = 1; P.x = 0; P.jumpY = 0; P.vy = 0; P.sliding = 0; P.air = false; P.tilt = 0;
+  P.jumpT = 99; P.slideT = 99; P.slideAnim = 0; P.land = 0;
   spawnAhead();
 }
 
@@ -840,10 +842,26 @@ function collect(o){
 }
 G.pops = [];
 
+/* dodge windows: generous, so a jump or slide pressed right at the obstacle
+   still counts, at any speed and on slow frames */
+var HAY_CLEAR = 0.2;     /* height that clears a hay bale */
+var HAY_GRACE = 0.34;    /* seconds after take-off that always clear a bale */
+var ROCK_CLEAR = 0.95;   /* a real jump clears a low rock */
+var SLIDE_GRACE = 0.28;  /* seconds after the slide starts that clear a gate */
+
 function collide(o){
   var safe = false;
-  if (o.kind === 'hay' && P.jumpY > 0.5) safe = true;
-  if (o.kind === 'gate' && P.sliding > 0) safe = true;
+  if (o.kind === 'hay'){
+    /* a hay bale never ends a run while he is off the ground: any jump clears
+       it, including a jump pressed right on the bale or a landing just after it */
+    if (P.air || P.jumpY > 0) safe = true;
+    else if (P.jumpT < HAY_GRACE) safe = true;
+    else if (P.land > 0) safe = true;
+  } else if (o.kind === 'rock'){
+    if (P.jumpY > ROCK_CLEAR) safe = true;
+  } else if (o.kind === 'gate'){
+    if (P.sliding > 0 || P.slideT < SLIDE_GRACE) safe = true;
+  }
   if (safe){ sfx('whoosh'); return; }
   gameOver();
 }
@@ -870,6 +888,8 @@ function update(dt){
     P.jumpY += P.vy * dt;
     if (P.jumpY <= 0){ P.jumpY = 0; P.vy = 0; P.air = false; P.land = 0.22; }
   }
+  if (P.air) P.jumpT += dt; else P.jumpT = 99;
+  P.slideT += dt;
   if (P.sliding > 0) P.sliding = Math.max(0, P.sliding - dt);
   P.slideAnim += ((P.sliding > 0 ? 1 : 0) - P.slideAnim) * Math.min(1, dt * 22);
   if (P.land > 0) P.land = Math.max(0, P.land - dt);
@@ -893,13 +913,13 @@ function update(dt){
 
 function jump(){
   if (G.state !== 'run' || P.air) return;
-  P.air = true; P.vy = 8.9; P.sliding = 0; P.slideAnim = 0;
+  P.air = true; P.vy = 8.9; P.sliding = 0; P.slideAnim = 0; P.jumpT = 0;
   sfx('jump');
 }
 function slide(){
   if (G.state !== 'run') return;
   if (P.air){ P.vy = -20; return; }   // fast fall
-  P.sliding = 0.5;
+  P.sliding = 0.5; P.slideT = 0;
   sfx('slide');
 }
 function move(dir){
