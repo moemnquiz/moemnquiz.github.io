@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#2d6a1e">
-<title>🌾 مزرعة مؤمن</title>
+<title>moemn farmr</title>
 <link rel="manifest" href="farm.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="3-farm-icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="4-farm-icon-512.png">
 <link rel="apple-touch-icon" href="3-farm-icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="مزرعة مؤمن">
+<meta name="apple-mobile-web-app-title" content="moemn farmr">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="لعبة مزرعة: امشي بالفلاح، ازرع واسقي واحصد وبيع، ووظّف شغالين يساعدوك - بتشتغل من غير نت">
 <style>
@@ -81,10 +81,10 @@ var CROPS={
   straw:{ar:"فراولة",ic:"🍓",seed:40,sell:100,grow:75}
 };
 var PROD={egg:{ar:"بيض",ic:"🥚",sell:18},milk:{ar:"لبن",ic:"🥛",sell:60}};
-var S={coins:50,day:1,dayT:0,plots:[],inv:{wheat:0,tomato:0,straw:0,egg:0,milk:0},animals:[],nworkers:0,up:{fert:false,hose:false},tool:"plant",crop:"wheat"};
+var S={coins:200,startBonusApplied:true,day:1,dayT:0,plots:[],inv:{wheat:0,tomato:0,straw:0,egg:0,milk:0},animals:[],dog:false,nworkers:0,up:{fert:false,hose:false},tool:"plant",crop:"wheat"};
 function newPlot(){return {st:"empty",crop:null,t:0,watered:false,wt:0,claim:-1};}
 for(var i=0;i<6;i++)S.plots.push(newPlot());
-try{var sv=localStorage.getItem("moemn-farm-v2");if(sv){var o=JSON.parse(sv);if(o&&o.plots){S=o;for(var q=0;q<S.plots.length;q++)S.plots[q].claim=-1;}}}catch(e){}
+try{var sv=localStorage.getItem("moemn-farm-v2");if(sv){var o=JSON.parse(sv);if(o&&o.plots){S=o;for(var q=0;q<S.plots.length;q++)S.plots[q].claim=-1;}}if(typeof S.dog==="undefined")S.dog=false;if(!S.startBonusApplied){S.coins=Math.max(200,S.coins||0);S.startBonusApplied=true;}}catch(e){}
 function save(){try{localStorage.setItem("moemn-farm-v2",JSON.stringify(S));}catch(e){}}
 
 var cv=document.getElementById("c"),ctx=cv.getContext("2d");
@@ -94,9 +94,9 @@ function layout(){
   var hudH=64,toolH=84;
   var mid=H-hudH-toolH;
   L.horizon=hudH+mid*0.16;
-  L.penY=L.horizon+8;L.penH=Math.min(88,mid*0.20);
+  L.penY=L.horizon+8;L.penH=Math.min(132,mid*0.30);
   L.fy=L.penY+L.penH+10;L.fh=H-toolH-L.fy-8;
-  L.fw=W-24;
+  L.fw=W-16;
   var n=S.plots.length,rows=Math.ceil(n/L.cols);
   L.pw=Math.min((L.fw-L.gap*(L.cols-1))/L.cols,(L.fh-L.gap*(rows-1))/rows);
   L.ph=L.pw*0.8;
@@ -136,6 +136,7 @@ function addFloat(x,y,txt,color){floats.push({x:x,y:y,txt:txt,t:0,color:color||"
 
 /* ---- characters ---- */
 var player={x:0,y:0,dir:1,moving:false,walk:0,speed:150,pend:null,gx:0,gy:0};
+var dog={x:0,y:0,dir:1,walk:0};
 var workers=[];
 function syncWorkers(){
   while(workers.length<S.nworkers){var k=workers.length;
@@ -171,10 +172,10 @@ function water(i){var p=S.plots[i];p.watered=true;p.wt=20;p.claim=-1;
     for(var k=0;k<4;k++){var j=nb[k];
       if(j>=0&&j<S.plots.length&&Math.abs((j%3)-(i%3))<=1&&S.plots[j].st==="grow"&&!S.plots[j].watered){S.plots[j].watered=true;S.plots[j].wt=20;}}}}
 function collectAnimal(a){
-  if(a.ready){S.inv[a.type==="chicken"?"egg":"milk"]++;a.ready=false;a.t=0;
+  if(a.ready){var amount=a.type==="chicken"?1:(a.type==="buffalo"?2:1);S.inv[a.type==="chicken"?"egg":"milk"]+=amount;a.ready=false;a.t=0;
     tone(a.type==="chicken"?700:500,.12);
-    addFloat(player.x,player.y-40,a.type==="chicken"?"+1 🥚":"+1 🥛","#fff");save();}
-  else toast(a.type==="chicken"?"الدجاجة لسه مبيضتش 🐔":"البقرة لسه محلبتش 🐄");
+    addFloat(player.x,player.y-40,a.type==="chicken"?"+1 🥚":"+"+amount+" 🥛","#fff");save();}
+  else toast(a.type==="chicken"?"الدجاجة لسه مبيضتش 🐔":a.type==="buffalo"?"الجاموسة لسه محلبتش 🐃":"البقرة لسه محلبتش 🐄");
 }
 
 /* ---- tap handling: walk-then-act ---- */
@@ -250,6 +251,11 @@ function buy(kind){
   else if(kind==="cow"){var nw=S.animals.filter(function(a){return a.type==="cow";}).length;
     if(nw>=2)return;if(S.coins<400){toast("فلوسك مش كفاية 🪙");return;}
     S.coins-=400;S.animals.push({type:"cow",t:0,ready:false});tone(400,.2);toast("بقرة جديدة! 🐄");}
+  else if(kind==="buffalo"){var nb=S.animals.filter(function(a){return a.type==="buffalo";}).length;
+    if(nb>=2)return;if(S.coins<700){toast("فلوسك مش كفاية 🪙");return;}
+    S.coins-=700;S.animals.push({type:"buffalo",t:0,ready:false});tone(350,.22);toast("جاموسة جديدة! 🐃");}
+  else if(kind==="dog"){if(S.dog)return;if(S.coins<300){toast("فلوسك مش كفاية 🪙");return;}
+    S.coins-=300;S.dog=true;dog.x=player.x-24;dog.y=player.y+6;tone(660,.15);toast("كلبك بقى معاك في المزرعة! 🐕");}
   else if(kind==="worker"){if(S.nworkers>=3)return;if(S.coins<500){toast("فلوسك مش كفاية 🪙");return;}
     S.coins-=500;S.nworkers++;syncWorkers();tone(620,.15);setTimeout(function(){tone(820,.12);},110);
     toast("شغّال جديد بيساعدك! 👨‍🌾");}
@@ -291,8 +297,11 @@ function renderPanel(){
     if(!S.up.hose)items.push({k:"hose",ic:"💦",nm:"خرطوم مية",ds:"السقي يوصل للأرض اللي جنبها كمان",p:200});
     var nc=S.animals.filter(function(a){return a.type==="chicken";}).length;
     var nw=S.animals.filter(function(a){return a.type==="cow";}).length;
+    var nb=S.animals.filter(function(a){return a.type==="buffalo";}).length;
+    if(!S.dog)items.push({k:"dog",ic:"🐕",nm:"كلب",ds:"يمشي وراك في المزرعة",p:300});
     if(nc<4)items.push({k:"chicken",ic:"🐔",nm:"دجاجة",ds:"بتبيض كل ٤٥ ثانية · البيضة بـ "+PROD.egg.sell+" 🪙 ("+nc+"/4)",p:120});
     if(nw<2)items.push({k:"cow",ic:"🐄",nm:"بقرة",ds:"بتدّي لبن كل ٩٠ ثانية · اللبن بـ "+PROD.milk.sell+" 🪙 ("+nw+"/2)",p:400});
+    if(nb<2)items.push({k:"buffalo",ic:"🐃",nm:"جاموس",ds:"بتدّي ٢ لبن كل ٧٥ ثانية · اللبن بـ "+PROD.milk.sell+" 🪙 ("+nb+"/2)",p:700});
     if(!items.length)h+='<div class="row"><div class="inf"><div class="nm">اشتريت كل حاجة! 🎉</div></div></div>';
     for(var i=0;i<items.length;i++){var it=items[i];
       h+='<div class="row"><div class="ic">'+it.ic+'</div><div class="inf"><div class="nm">'+it.nm+'</div><div class="ds">'+it.ds+'</div></div>'+
@@ -354,7 +363,7 @@ function joyEnd(e){
   for(var i=0;i<L.grid.length;i++){var g=L.grid[i];
     if(x>=g.x-6&&x<=g.x+L.pw+6&&y>=g.y-8&&y<=g.y+L.ph+10){tapPlot(i);return;}}
   for(var j=0;j<S.animals.length;j++){var p=animalPos(j,S.animals.length);
-    var dx2=x-p.x,dy2=y-p.y;var r=S.animals[j].type==="cow"?50:34;
+    var dx2=x-p.x,dy2=y-p.y;var r=S.animals[j].type==="buffalo"?58:(S.animals[j].type==="cow"?50:34);
     if(dx2*dx2+dy2*dy2<r*r){tapAnimal(S.animals[j]);return;}}
   if(y>L.gy0+10){player.pend=null;player.gx=x;player.gy=y;player.moving=true;}
 }
@@ -375,7 +384,7 @@ function tick(now){
       if(p.t>=CROPS[p.crop].grow){p.st="ready";if(p.claim>=0)p.claim=-1;}}
   }
   for(var j=0;j<S.animals.length;j++){var a=S.animals[j];
-    if(!a.ready){a.t+=dt;var need=a.type==="chicken"?45:90;if(a.t>=need)a.ready=true;}}
+    if(!a.ready){a.t+=dt;var need=a.type==="chicken"?45:(a.type==="buffalo"?75:90);if(a.t>=need)a.ready=true;}}
   /* player */
   if(joy.active&&(joy.dx||joy.dy)){
     var dd=Math.sqrt(joy.dx*joy.dx+joy.dy*joy.dy);
@@ -384,6 +393,7 @@ function tick(now){
     player.y=clamp(player.y+joy.dy/dd*sp,L.gy0+20,L.gy1);
     player.dir=joy.dx>=0?1:-1;player.walk+=dt*10;player.moving=false;
   }else moveChar(player,dt);
+  if(S.dog){var dogX=clamp(player.x-player.dir*27,12,W-12),dogY=clamp(player.y+8,L.gy0+20,L.gy1);var blend=Math.min(1,dt*8);dog.x+=(dogX-dog.x)*blend;dog.y+=(dogY-dog.y)*blend;if(Math.abs(dogX-dog.x)>1){dog.dir=dogX>=dog.x?1:-1;dog.walk+=dt*9;}}
   /* workers */
   for(var wi=0;wi<workers.length;wi++){var w=workers[wi];
     if(!w.moving){w.think-=dt;if(w.think<=0){w.think=0.7+wi*0.3;workerThink(w);}}
@@ -404,9 +414,12 @@ for(var fl=0;fl<16;fl++){flowers.push({rx:(fl*37%97)/97,ry:(fl*53%89)/89,c:["#ff
 var flies=[{s:0},{s:2.1}];
 function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 function animalPos(i,n){
-  var aw=Math.min(96,L.fw/Math.max(n,1));
-  var startx=L.fx+L.fw/2-(n-1)*aw/2;
-  return {x:startx+i*aw,y:L.penY+L.penH*0.6};
+  var cols=Math.max(1,Math.floor((L.fw-36)/74));
+  var rows=Math.max(1,Math.ceil(n/cols));
+  var col=i%cols,row=Math.floor(i/cols);
+  var gapX=(L.fw-36)/Math.max(1,cols-1);
+  var gapY=Math.min(48,(L.penH-38)/Math.max(1,rows-1));
+  return {x:L.fx+18+col*gapX,y:L.penY+19+row*gapY};
 }
 function draw(t){
   ctx.fillStyle=skyG;ctx.fillRect(0,0,W,L.horizon+2);
@@ -446,6 +459,7 @@ function draw(t){
   ctx.strokeStyle="#8a5a2e";ctx.lineWidth=4;rr(L.fx,L.penY,L.fw,L.penH,12);ctx.stroke();
   /* animals */
   for(var ai=0;ai<S.animals.length;ai++){drawAnimal(S.animals[ai],ai,t);}
+  if(S.dog)drawDog(t);
   /* plots */
   for(var pi=0;pi<S.plots.length;pi++)drawPlot(pi,t);
   /* characters (workers then player) */
@@ -504,6 +518,16 @@ function drawFarmer(c,t,isWorker){
     ctx.fillText(S.tool==="plant"?"🌱":S.tool==="water"?"💧":"🧺",x,y-36);
   }
 }
+function drawDog(t){
+  var x=dog.x,y=dog.y+Math.sin(t*5)*1.5;
+  ctx.fillStyle="#0003";ctx.beginPath();ctx.ellipse(x,y+8,15,4,0,0,7);ctx.fill();
+  ctx.fillStyle="#a96b35";ctx.beginPath();ctx.ellipse(x,y,14,9,0,0,7);ctx.fill();
+  ctx.beginPath();ctx.arc(x+dog.dir*11,y-5,7,0,7);ctx.fill();
+  ctx.fillStyle="#75451f";ctx.beginPath();ctx.ellipse(x+dog.dir*15,y-11,3,6,dog.dir*.35,0,7);ctx.fill();
+  ctx.fillStyle="#222";ctx.beginPath();ctx.arc(x+dog.dir*14,y-6,1.2,0,7);ctx.fill();
+  ctx.strokeStyle="#75451f";ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(x-7,y+6);ctx.lineTo(x-8,y+12);ctx.moveTo(x+4,y+6);ctx.lineTo(x+4,y+12);ctx.stroke();
+  ctx.strokeStyle="#75451f";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-dog.dir*12,y);ctx.quadraticCurveTo(x-dog.dir*21,y-5+Math.sin(t*8)*3,x-dog.dir*18,y-8);ctx.stroke();
+}
 function drawAnimal(a,i,t){
   var p=animalPos(i,S.animals.length);
   var bob=Math.sin(t*3+i*2)*2.2;
@@ -519,6 +543,16 @@ function drawAnimal(a,i,t){
     if(a.ready){var ey=y-30-Math.abs(Math.sin(t*4))*4;
       ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(x+2,ey,6,7.5,0,0,7);ctx.fill();
       ctx.strokeStyle="#8a5a2e";ctx.lineWidth=1.5;ctx.stroke();}
+  }else if(a.type==="buffalo"){
+    ctx.fillStyle="#45413e";rr(x-31,y-19,62,36,15);ctx.fill();
+    ctx.fillStyle="#353230";ctx.beginPath();ctx.arc(x+27,y-6,14,0,7);ctx.fill();
+    ctx.fillStyle="#5a5551";ctx.beginPath();ctx.ellipse(x-3,y-18,13,8,0,0,7);ctx.fill();
+    ctx.fillStyle="#d6c9b4";ctx.beginPath();ctx.moveTo(x+18,y-16);ctx.quadraticCurveTo(x+12,y-31,x+25,y-24);ctx.quadraticCurveTo(x+31,y-20,x+29,y-15);ctx.fill();
+    ctx.beginPath();ctx.moveTo(x+39,y-16);ctx.quadraticCurveTo(x+47,y-31,x+36,y-23);ctx.quadraticCurveTo(x+32,y-20,x+34,y-15);ctx.fill();
+    ctx.fillStyle="#222";ctx.beginPath();ctx.arc(x+31,y-9,1.8,0,7);ctx.arc(x+41,y-9,1.8,0,7);ctx.fill();
+    ctx.fillStyle="#9c7662";ctx.beginPath();ctx.ellipse(x+37,y-1,9,5,0,0,7);ctx.fill();
+    ctx.strokeStyle="#302d2b";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-18,y+13);ctx.lineTo(x-18,y+23);ctx.moveTo(x+12,y+13);ctx.lineTo(x+12,y+23);ctx.stroke();
+    if(a.ready){var by=y-42-Math.abs(Math.sin(t*4))*4;ctx.fillStyle="#fff";rr(x-4,by-9,9,14,3);ctx.fill();ctx.fillStyle="#5db9f0";ctx.fillRect(x-3,by-11,7,4);ctx.fillRect(x+3,by-8,7,12);}
   }else{
     ctx.fillStyle="#fff";rr(x-26,y-16,52,30,12);ctx.fill();
     ctx.fillStyle="#333";
@@ -610,7 +644,7 @@ function showSheet(html){sheet.innerHTML=html;sheetOv.classList.add("on");}
 sheetOv.addEventListener("pointerdown",function(e){if(e.target===sheetOv||e.target.closest(".ok"))sheetOv.classList.remove("on");});
 installBtn.addEventListener("pointerdown",function(){
   if(deferred){deferred.prompt();deferred.userChoice.then(function(){deferred=null;}).catch(function(){deferred=null;});return;}
-  showSheet('<div class="big">📲</div><h2>تثبيت اللعبة</h2><p>من قائمة كروم (⋮) اللي فوق اختار «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».<br>بعدها هتلاقي 🌾 مزرعة مؤمن على شاشة الموبايل زي أي تطبيق، وبتشتغل حتى لو مفيش نت.</p><button class="ok">تمام 👍</button>');
+  showSheet('<div class="big">📲</div><h2>تثبيت اللعبة</h2><p>من قائمة كروم (⋮) اللي فوق اختار «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».<br>بعدها هتلاقي moemn farmr على شاشة الموبايل زي أي تطبيق، وبتشتغل حتى لو مفيش نت.</p><button class="ok">تمام 👍</button>');
 });
 var ua=navigator.userAgent||"";
 if(!installed&&/WhatsApp|FBAN|FBAV|Instagram|Telegram/i.test(ua)){
