@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "moemn quiz",
+  "short_name": "moemn quiz",
+  "description": "كويز سريع بالعربي - يشتغل من غير نت",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#14102b",
+  "theme_color": "#14102b",
+  "icons": [
+    { "src": "/10-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/11-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/10-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/11-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
