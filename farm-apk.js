@@ -32,7 +32,10 @@
 
   function wire() {
     var old = document.getElementById('installBtn');
-    if (!old || isStandalone()) return;
+    var ua = navigator.userAgent || '';
+    var inApp = isStandalone() || /;\s*wv\)/i.test(ua) || /moemnquiz1/i.test(ua);
+    if (!old) return;
+    if (inApp) { old.remove(); var ov=document.getElementById('sheetOv'); if(ov) ov.classList.remove('on'); return; }
     var btn = old.cloneNode(true);
     old.parentNode.replaceChild(btn, old);
     btn.addEventListener('pointerdown', function (ev) {
