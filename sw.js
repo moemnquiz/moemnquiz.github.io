@@ -1,5 +1,5 @@
 /* moemn quiz - offline service worker */
-var VERSION = 'mq-v5';
+var VERSION = 'mq-v6';
 var SHELL = [
   '/',
   '/index.html',
@@ -15,7 +15,11 @@ var SHELL = [
   '/stickclash.webmanifest',
   '/8-icon-game-192.png',
   '/9-icon-game-512.png',
-  '/1-stick-clash-3d.html'
+  '/1-stick-clash-3d.html',
+  '/farm-game.html',
+  '/farm.webmanifest',
+  '/3-farm-icon-192.png',
+  '/4-farm-icon-512.png'
 ];
 
 self.addEventListener('install', function (e) {
