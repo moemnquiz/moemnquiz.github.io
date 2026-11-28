@@ -465,11 +465,12 @@ function drawGate(o){
   var u = unitOf(o.z);
   if (u < 1) return;
   var x = xOf(o.lane - 1, o.z), y = yOf(o.z);
-  var w = u * 0.98, top = y - u * 1.02, bot = y - u * 0.5;
+  var w = u * 0.92, top = y - u * 1.0, bot = y - u * 0.66;
   // posts
   ctx.fillStyle = '#7a5432';
-  ctx.fillRect(x - w / 2, top, Math.max(2, u * 0.08), y - top);
-  ctx.fillRect(x + w / 2 - Math.max(2, u * 0.08), top, Math.max(2, u * 0.08), y - top);
+  var pw2 = Math.max(1.6, u * 0.055);
+  ctx.fillRect(x - w / 2, top, pw2, y - top);
+  ctx.fillRect(x + w / 2 - pw2, top, pw2, y - top);
   // beam
   var g = ctx.createLinearGradient(0, top, 0, bot);
   g.addColorStop(0, '#e9e4d6'); g.addColorStop(1, '#c9c0ac');
