@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0a1a">
 <title>ألعاب مؤمن - تحميل</title>
-<meta name="description" content="حمّل ألعاب مؤمن بضغطة واحدة: المزرعة، الكويز، وحرب العصيان.">
+<meta name="description" content="حمّل ألعاب مؤمن بضغطة واحدة: المزرعة، الكويز، حرب العصيان، ومؤمن ران.">
 <link rel="icon" type="image/png" sizes="192x192" href="10-icon-192.png">
 <style>
   :root{--bg:#0b0a1a;--card:#171436;--line:#2a2652;--txt:#f4f2ff;--dim:#b9b4e0;--green1:#4ee06f;--green2:#1fa843;}
@@ -71,6 +71,18 @@
     <a class="alt" href="stick-clash-app.html">أو العب من المتصفح</a>
   </div>
 
+  <div class="card">
+    <div class="head">
+      <img src="run-icon-192.png" alt="moemn run">
+      <div>
+        <p class="name">moemn run 🐱</p>
+        <p class="desc">اجرِ بالقطة، انط فوق الصخور والتبن، وزحلق تحت الحواجز.</p>
+      </div>
+    </div>
+    <a class="btn" href="moemn-run.apk" download type="application/vnd.android.package-archive">⬇️ حمّل اللعبة <span>APK</span></a>
+    <a class="alt" href="moemn-run.html">أو العب من المتصفح</a>
+  </div>
+
   <div class="note">
     <b>أول مرة بس:</b> لما الملف ينزل، دوس عليه واختار «تثبيت». لو ظهر تحذير، اختار «السماح من المصدر ده». بعد كده اللعبة هتبقى أيقونة على شاشتك وتشتغل من غير نت.
   </div>
@@ -98,8 +110,8 @@
   var visits = counted ? hit('dl-visits') : get('dl-visits');
 
   function refresh(){
-    return Promise.all([visits,get('dl-farm'),get('dl-quiz'),get('dl-stick')]).then(function(a){
-      var v=a[0], ds=[a[1],a[2],a[3]].filter(function(x){return typeof x==='number';});
+    return Promise.all([visits,get('dl-farm'),get('dl-quiz'),get('dl-stick'),get('dl-run')]).then(function(a){
+      var v=a[0], ds=[a[1],a[2],a[3],a[4]].filter(function(x){return typeof x==='number';});
       if(typeof v!=='number' && !ds.length) return;
       var total=ds.reduce(function(t,x){return t+x;},0);
       elV.textContent=(typeof v==='number')?v:'-';
@@ -110,7 +122,7 @@
   refresh();
 
   // عدّاد التحميلات: كل ضغطة على زرار APK
-  var map={'1-moemn-farmr.apk':'dl-farm','moemn-quiz.apk':'dl-quiz','moemn-stick.apk':'dl-stick'};
+  var map={'1-moemn-farmr.apk':'dl-farm','moemn-quiz.apk':'dl-quiz','moemn-stick.apk':'dl-stick','moemn-run.apk':'dl-run'};
   document.addEventListener('click',function(e){
     var a=e.target && e.target.closest ? e.target.closest('a[href]') : null;
     if(!a) return;
