@@ -61,6 +61,7 @@ canvas#c{position:fixed;inset:0;touch-action:none;display:block}
   <div class="sp"></div>
   <button class="hbtn" id="bShop">🛒 المحل</button>
   <button class="hbtn" id="bMarket">🏪 السوق</button>
+  <button class="hbtn" id="bMusic" title="الصوت">🔊</button>
 </div>
 <div id="hint">شدّ بصباعك عشان تمشي 👆 · ودوس على الأرض عشان تشتغلها</div>
 <div id="tools">
@@ -84,7 +85,7 @@ var PROD={egg:{ar:"بيض",ic:"🥚",sell:18},milk:{ar:"لبن",ic:"🥛",sell:6
 var S={coins:200,startBonusApplied:true,day:1,dayT:0,plots:[],inv:{wheat:0,tomato:0,straw:0,egg:0,milk:0},animals:[],dog:false,nworkers:0,up:{fert:false,hose:false},tool:"plant",crop:"wheat"};
 function newPlot(){return {st:"empty",crop:null,t:0,watered:false,wt:0,claim:-1};}
 for(var i=0;i<6;i++)S.plots.push(newPlot());
-try{var sv=localStorage.getItem("moemn-farm-v2");if(sv){var o=JSON.parse(sv);if(o&&o.plots){S=o;for(var q=0;q<S.plots.length;q++)S.plots[q].claim=-1;}}if(typeof S.dog==="undefined")S.dog=false;if(!S.startBonusApplied){S.coins=Math.max(200,S.coins||0);S.startBonusApplied=true;}}catch(e){}
+try{var sv=localStorage.getItem("moemn-farm-v2");if(sv){var o=JSON.parse(sv);if(o&&o.plots){S=o;for(var q=0;q<S.plots.length;q++)S.plots[q].claim=-1;}}if(typeof S.dog==="undefined")S.dog=false;if(typeof S.music==="undefined")S.music=true;if(!S.startBonusApplied){S.coins=Math.max(200,S.coins||0);S.startBonusApplied=true;}}catch(e){}
 function save(){try{localStorage.setItem("moemn-farm-v2",JSON.stringify(S));}catch(e){}}
 
 var cv=document.getElementById("c"),ctx=cv.getContext("2d");
@@ -121,10 +122,31 @@ function clamp(v,a,b){return v<a?a:(v>b?b:v);}
 
 /* ---- audio ---- */
 var AC=null;
-function tone(f,d,g){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();
-  var o=AC.createOscillator(),v=AC.createGain();o.type="sine";o.frequency.value=f;
-  v.gain.setValueAtTime(g||0.12,AC.currentTime);v.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);
-  o.connect(v);v.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+function ac(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();}catch(e){}return AC;}
+function tone(f,d,g){var a=ac();if(!a)return;try{
+  var o=a.createOscillator(),v=a.createGain();o.type="sine";o.frequency.value=f;
+  v.gain.setValueAtTime(g||0.12,a.currentTime);v.gain.exponentialRampToValueAtTime(0.001,a.currentTime+d);
+  o.connect(v);v.connect(a.destination);o.start();o.stop(a.currentTime+d);}catch(e){}}
+
+/* ---- music: original bouncy farm loop, made for this game ---- */
+var MUS={timer:null,step:0,next:0,master:null};
+var STEP=0.30;
+var MELODY=[523,659,784,659,523,659,784,0,440,523,587,523,440,523,587,0,659,784,880,784,659,784,880,0,587,659,587,523,587,523,0,0];
+var BASSM=[131,0,0,0,131,0,0,0,175,0,0,0,175,0,0,0,110,0,0,0,110,0,0,0,196,0,0,0,131,0,0,0];
+function musicEnsure(){var a=ac();if(!a)return null;
+  if(!MUS.master){try{MUS.master=a.createGain();MUS.master.gain.value=0.09;MUS.master.connect(a.destination);}catch(e){return null;}}return a;}
+function musNote(f,t,d,type,g){try{var o=AC.createOscillator(),v=AC.createGain();o.type=type;o.frequency.value=f;
+  v.gain.setValueAtTime(0.0001,t);v.gain.linearRampToValueAtTime(g,t+0.02);v.gain.exponentialRampToValueAtTime(0.001,t+d);
+  o.connect(v);v.connect(MUS.master);o.start(t);o.stop(t+d+0.05);}catch(e){}}
+function musTick(){if(!MUS.master||!AC)return;var now=AC.currentTime;
+  while(MUS.next<now+0.6){var i=MUS.step%32,f=MELODY[i],b=BASSM[i];
+    if(f)musNote(f,MUS.next,0.26,"triangle",0.5);
+    if(b)musNote(b,MUS.next,0.55,"sine",0.5);
+    MUS.step++;MUS.next+=STEP;}}
+function musicStart(){if(MUS.timer||S.music===false)return;var a=musicEnsure();if(!a)return;
+  if(MUS.next<a.currentTime+0.05)MUS.next=a.currentTime+0.08;
+  MUS.timer=setInterval(musTick,180);}
+function musicStop(){if(MUS.timer){clearInterval(MUS.timer);MUS.timer=null;}}
 
 /* ---- toast ---- */
 var toastEl=document.getElementById("toast"),toastTm=null;
@@ -339,6 +361,12 @@ tbtns.forEach(function(b){b.addEventListener("pointerdown",function(){
 });});
 document.getElementById("bShop").addEventListener("pointerdown",function(){openPanel("shop");});
 document.getElementById("bMarket").addEventListener("pointerdown",function(){openPanel("market");});
+var bMusic=document.getElementById("bMusic");
+function musicUI(){bMusic.textContent=S.music===false?"🔇":"🔊";}
+bMusic.addEventListener("pointerdown",function(e){e.stopPropagation();S.music=!(S.music!==false);save();musicUI();
+  if(S.music===false)musicStop();else musicStart();});
+musicUI();
+document.addEventListener("pointerdown",function boot(){document.removeEventListener("pointerdown",boot);musicStart();});
 var hintEl=document.getElementById("hint");
 setTimeout(function(){hintEl.style.transition="opacity 1s";hintEl.style.opacity="0";},9000);
 
@@ -370,7 +398,7 @@ function joyEnd(e){
 cv.addEventListener("pointerup",joyEnd);
 cv.addEventListener("pointercancel",joyEnd);
 document.addEventListener("touchmove",function(e){e.preventDefault();},{passive:false});
-document.addEventListener("visibilitychange",function(){if(document.hidden)save();});
+document.addEventListener("visibilitychange",function(){if(document.hidden){save();musicStop();}else musicStart();});
 
 /* ---- tick ---- */
 var last=performance.now(),fpsN=0,fpsT=0,fps=60;
