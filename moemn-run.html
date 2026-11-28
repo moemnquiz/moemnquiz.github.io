@@ -851,16 +851,18 @@ var SLIDE_GRACE = 0.28;  /* seconds after the slide starts that clear a gate */
 
 function collide(o){
   var safe = false;
-  if (o.kind === 'hay'){
-    /* a hay bale never ends a run while he is off the ground: any jump clears
-       it, including a jump pressed right on the bale or a landing just after it */
+  if (o.kind === 'hay' || o.kind === 'rock'){
+    /* ground obstacles (hay bale, big rock) never end a run while he is off
+       the ground: any jump clears them or lands him on top and he keeps
+       running, including a jump pressed right on the block or a landing
+       just after it */
     if (P.air || P.jumpY > 0) safe = true;
     else if (P.jumpT < HAY_GRACE) safe = true;
     else if (P.land > 0) safe = true;
-  } else if (o.kind === 'rock'){
-    if (P.jumpY > ROCK_CLEAR) safe = true;
   } else if (o.kind === 'gate'){
+    /* gates: slide under, or jump clean over the beam */
     if (P.sliding > 0 || P.slideT < SLIDE_GRACE) safe = true;
+    else if (P.jumpY > 0.75) safe = true;
   }
   if (safe){ sfx('whoosh'); return; }
   gameOver();
