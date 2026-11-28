@@ -26,6 +26,8 @@
   .note{background:#151233;border:1px dashed #3b3670;border-radius:16px;padding:13px 15px;color:var(--dim);font-size:13.5px;line-height:1.75;margin-top:8px}
   .note b{color:#ffe066}
   footer{text-align:center;color:#6f6a99;font-size:12.5px;margin-top:22px}
+  .stats{text-align:center;color:#9a94c9;font-size:13px;margin-top:14px;line-height:1.7}
+  .stats b{color:#ffe066;font-weight:800}
 </style>
 </head>
 <body>
@@ -72,7 +74,56 @@
   <div class="note">
     <b>أول مرة بس:</b> لما الملف ينزل، دوس عليه واختار «تثبيت». لو ظهر تحذير، اختار «السماح من المصدر ده». بعد كده اللعبة هتبقى أيقونة على شاشتك وتشتغل من غير نت.
   </div>
+  <div class="stats" id="stats" hidden>👀 <b id="s-visits">0</b> زائر · ⬇️ <b id="s-downloads">0</b> تحميل</div>
   <footer>moemnquiz.github.io</footer>
 </div>
+<script>
+(function(){
+  var NS='moemnquiz.github.io', API='https://abacus.jasoncameron.dev/';
+  var box=document.getElementById('stats'), elV=document.getElementById('s-visits'), elD=document.getElementById('s-downloads');
+  if(!box||!elV||!elD) return;
+  function call(path,extra){
+    var opts={cache:'no-store',mode:'cors'};
+    for(var k in (extra||{})) opts[k]=extra[k];
+    return fetch(API+path,opts).then(function(r){return r.json()})
+      .then(function(j){return (j&&typeof j.value==='number')?j.value:null})
+      .catch(function(){return null});
+  }
+  function hit(key){return call('hit/'+NS+'/'+key,{keepalive:true});}
+  function get(key){return call('get/'+NS+'/'+key);}
+
+  // عدد الزوار: مرة واحدة لكل جلسة متصفح
+  var counted=false;
+  try{ if(!sessionStorage.getItem('moemn_dl_seen')){ sessionStorage.setItem('moemn_dl_seen','1'); counted=true; } }catch(e){}
+  var visits = counted ? hit('dl-visits') : get('dl-visits');
+
+  function refresh(){
+    return Promise.all([visits,get('dl-farm'),get('dl-quiz'),get('dl-stick')]).then(function(a){
+      var v=a[0], ds=[a[1],a[2],a[3]].filter(function(x){return typeof x==='number';});
+      if(typeof v!=='number' && !ds.length) return;
+      var total=ds.reduce(function(t,x){return t+x;},0);
+      elV.textContent=(typeof v==='number')?v:'-';
+      elD.textContent=total;
+      box.hidden=false;
+    });
+  }
+  refresh();
+
+  // عدّاد التحميلات: كل ضغطة على زرار APK
+  var map={'1-moemn-farmr.apk':'dl-farm','moemn-quiz.apk':'dl-quiz','moemn-stick.apk':'dl-stick'};
+  document.addEventListener('click',function(e){
+    var a=e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if(!a) return;
+    var href=(a.getAttribute('href')||'').replace(/^\.\//,'');
+    var key=map[href];
+    if(!key) return;
+    hit(key).then(function(n){
+      if(typeof n!=='number') return;
+      var cur=parseInt(elD.textContent,10);
+      if(!isNaN(cur)){ elD.textContent=cur+1; box.hidden=false; }
+    });
+  },true);
+})();
+</script>
 </body>
 </html>
