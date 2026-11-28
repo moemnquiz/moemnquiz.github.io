@@ -178,6 +178,7 @@
     <div class="chip">أفضل <b id="oBest">0</b></div>
   </div>
   <button class="go" id="bAgain">العب تاني</button>
+  <button class="go ghost" id="bExit3">🚪 خروج</button>
 </div>
 
 <div class="ov" id="skinOv">
@@ -1301,6 +1302,7 @@ document.getElementById('bSkins2').addEventListener('click', function(e){ e.stop
 document.getElementById('bCloseSkins').addEventListener('click', function(e){ e.stopPropagation(); closeSkins(); });
 document.getElementById('bExit').addEventListener('click', function(e){ e.stopPropagation(); exitGame(); });
 document.getElementById('bExit2').addEventListener('click', function(e){ e.stopPropagation(); exitGame(); });
+document.getElementById('bExit3').addEventListener('click', function(e){ e.stopPropagation(); exitGame(); });
 
 document.addEventListener('visibilitychange', function(){
   if (document.hidden && G.state === 'run') togglePause();
