@@ -487,12 +487,16 @@ function draw(t){
   ctx.strokeStyle="#8a5a2e";ctx.lineWidth=4;rr(L.fx,L.penY,L.fw,L.penH,12);ctx.stroke();
   /* animals */
   for(var ai=0;ai<S.animals.length;ai++){drawAnimal(S.animals[ai],ai,t);}
-  if(S.dog)drawDog(t);
   /* plots */
   for(var pi=0;pi<S.plots.length;pi++)drawPlot(pi,t);
-  /* characters (workers then player) */
-  for(var wi=0;wi<workers.length;wi++)drawFarmer(workers[wi],t,true);
-  drawFarmer(player,t,false);
+  /* characters sorted by depth so the dog walks on the grass in front of the plots */
+  var chars=[];
+  for(var wi=0;wi<workers.length;wi++)chars.push({y:workers[wi].y,w:workers[wi]});
+  if(S.dog)chars.push({y:dog.y,d:1});
+  chars.push({y:player.y,p:1});
+  chars.sort(function(a,b){return a.y-b.y;});
+  for(var ci2=0;ci2<chars.length;ci2++){var ch=chars[ci2];
+    if(ch.d)drawDog(t);else if(ch.p)drawFarmer(player,t,false);else drawFarmer(ch.w,t,true);}
   /* floaters */
   ctx.textAlign="center";ctx.font="800 15px system-ui,Tahoma,Arial";
   for(var fo=0;fo<floats.length;fo++){var fl2=floats[fo];
