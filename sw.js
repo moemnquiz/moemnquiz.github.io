@@ -1,10 +1,11 @@
 /* moemn quiz - offline service worker */
-var VERSION = 'mq-v3';
+var VERSION = 'mq-v4';
 var SHELL = [
   '/',
   '/index.html',
   '/app.js',
   '/1-quiz20.js',
+  '/1-2-quiz20-louder.js',
   '/app.css',
   '/manifest.webmanifest',
   '/10-icon-192.png',
