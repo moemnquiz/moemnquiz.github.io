@@ -83,6 +83,18 @@
     <a class="alt" href="moemn-run.html">أو العب من المتصفح</a>
   </div>
 
+  <div class="card">
+    <div class="head">
+      <img src="3-grow-icon-192.png" alt="moemn grow">
+      <div>
+        <p class="name">moemn grow 🏰</p>
+        <p class="desc">دافع عن قصرك، كبّر الدور كل مرة، واضرب الوحوش بسهم في إيدك.</p>
+      </div>
+    </div>
+    <a class="btn" href="moemn-grow.apk" download type="application/vnd.android.package-archive">⬇️ حمّل اللعبة <span>APK</span></a>
+    <a class="alt" href="moemn-grow.html">أو العب من المتصفح</a>
+  </div>
+
   <div class="note">
     <b>أول مرة بس:</b> لما الملف ينزل، دوس عليه واختار «تثبيت». لو ظهر تحذير، اختار «السماح من المصدر ده». بعد كده اللعبة هتبقى أيقونة على شاشتك وتشتغل من غير نت.
   </div>
@@ -110,8 +122,8 @@
   var visits = counted ? hit('dl-visits') : get('dl-visits');
 
   function refresh(){
-    return Promise.all([visits,get('dl-farm'),get('dl-quiz'),get('dl-stick'),get('dl-run')]).then(function(a){
-      var v=a[0], ds=[a[1],a[2],a[3],a[4]].filter(function(x){return typeof x==='number';});
+    return Promise.all([visits,get('dl-farm'),get('dl-quiz'),get('dl-stick'),get('dl-run'),get('dl-grow')]).then(function(a){
+      var v=a[0], ds=[a[1],a[2],a[3],a[4],a[5]].filter(function(x){return typeof x==='number';});
       if(typeof v!=='number' && !ds.length) return;
       var total=ds.reduce(function(t,x){return t+x;},0);
       elV.textContent=(typeof v==='number')?v:'-';
@@ -122,7 +134,7 @@
   refresh();
 
   // عدّاد التحميلات: كل ضغطة على زرار APK
-  var map={'1-moemn-farmr.apk':'dl-farm','moemn-quiz.apk':'dl-quiz','moemn-stick.apk':'dl-stick','moemn-run.apk':'dl-run'};
+  var map={'1-moemn-farmr.apk':'dl-farm','moemn-quiz.apk':'dl-quiz','moemn-stick.apk':'dl-stick','moemn-run.apk':'dl-run','moemn-grow.apk':'dl-grow'};
   document.addEventListener('click',function(e){
     var a=e.target && e.target.closest ? e.target.closest('a[href]') : null;
     if(!a) return;
