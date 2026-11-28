@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0a1a">
+<meta name="robots" content="noindex, nofollow">
+<title>أرقام صفحة التحميل</title>
+<link rel="icon" type="image/png" sizes="192x192" href="10-icon-192.png">
+<style>
+  :root{--bg:#0b0a1a;--card:#171436;--line:#2a2652;--txt:#f4f2ff;--dim:#b9b4e0;--gold:#ffe066;--green1:#4ee06f;--green2:#1fa843;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0a1a;background-image:radial-gradient(120% 70% at 50% 0%,#2a2068 0%,#0b0a1a 62%);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;padding:22px 14px calc(30px + env(safe-area-inset-bottom));min-height:100vh}
+  .wrap{max-width:520px;margin:0 auto}
+  h1{font-size:24px;margin:6px 0 6px;text-align:center}
+  .sub{text-align:center;color:var(--dim);font-size:14px;margin:0 0 18px;line-height:1.6}
+  h2{font-size:16px;margin:20px 0 8px;color:var(--dim);font-weight:800;text-align:center}
+  .big{background:linear-gradient(180deg,#1c1844,#141130);border:1px solid var(--line);border-radius:22px;padding:18px 16px;margin:0 0 14px;box-shadow:0 10px 26px #00000070;text-align:center}
+  .big .n{font-size:44px;font-weight:900;color:var(--gold);line-height:1.15}
+  .big .l{font-size:15px;color:var(--dim);margin-top:4px}
+  .row{display:flex;gap:12px}
+  .row .big{flex:1}
+  .row .big .n{font-size:34px}
+  .card{background:linear-gradient(180deg,#1c1844,#141130);border:1px solid var(--line);border-radius:18px;padding:12px 16px;margin:0 0 8px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .card .name{font-size:15.5px;font-weight:800}
+  .card .n{font-size:24px;font-weight:900;color:var(--gold)}
+  button{display:block;width:100%;margin-top:16px;min-height:56px;border:0;border-radius:16px;background:linear-gradient(180deg,var(--green1),var(--green2));color:#04240f;font-size:18px;font-weight:900;font-family:inherit;box-shadow:0 5px 0 #14702c}
+  button:active{transform:translateY(2px);box-shadow:0 3px 0 #14702c}
+  .note{color:#8f89bb;font-size:12.5px;line-height:1.7;text-align:center;margin-top:16px}
+  .err{color:#ffb3b3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📊 أرقام صفحة التحميل</h1>
+  <p class="sub">كام واحد دخل صفحة الألعاب، كام واحد حمّل كل لعبة، والزيارات جاية من فين.</p>
+
+  <div class="big"><div class="n" id="visits">…</div><div class="l">👀 زائر للصفحة</div></div>
+  <div class="row"><div class="big"><div class="n" id="downloads">…</div><div class="l">⬇️ إجمالي التحميلات</div></div></div>
+
+  <h2>التحميلات لكل لعبة</h2>
+  <div class="card"><span class="name">🌻 moemn plants</span><span class="n" id="plants">…</span></div>
+  <div class="card"><span class="name">🏰 moemn grow 1</span><span class="n" id="grow">…</span></div>
+  <div class="card"><span class="name">⚔️ moemn grow 2</span><span class="n" id="grow2">…</span></div>
+  <div class="card"><span class="name">👥 moemn grow 3</span><span class="n" id="grow3">…</span></div>
+  <div class="card"><span class="name">🌾 مزرعة مؤمن</span><span class="n" id="farm">…</span></div>
+  <div class="card"><span class="name">❓ كويز مؤمن</span><span class="n" id="quiz">…</span></div>
+  <div class="card"><span class="name">⚔️ حرب العصيان ٢</span><span class="n" id="stick">…</span></div>
+  <div class="card"><span class="name">🐱 moemn run</span><span class="n" id="run">…</span></div>
+  <div class="card"><span class="name">♟️ شطرنج مؤمن</span><span class="n" id="chess">…</span></div>
+
+  <h2>الزيارات جاية من فين</h2>
+  <div class="card"><span class="name">🎵 تيك توك</span><span class="n" id="src-tiktok">…</span></div>
+  <div class="card"><span class="name">📸 انستجرام</span><span class="n" id="src-instagram">…</span></div>
+  <div class="card"><span class="name">📘 فيسبوك</span><span class="n" id="src-facebook">…</span></div>
+  <div class="card"><span class="name">💬 واتساب</span><span class="n" id="src-whatsapp">…</span></div>
+  <div class="card"><span class="name">🔎 جوجل</span><span class="n" id="src-google">…</span></div>
+  <div class="card"><span class="name">▶️ يوتيوب</span><span class="n" id="src-youtube">…</span></div>
+  <div class="card"><span class="name">🔗 لينك من غير مصدر</span><span class="n" id="src-direct">…</span></div>
+  <div class="card"><span class="name">🌐 مصادر تانية</span><span class="n" id="src-other">…</span></div>
+
+  <button id="again" type="button">🔄 حدّث الأرقام</button>
+  <p class="note" id="meta">العداد مجاني ومش بيجمع أي بيانات شخصية: أرقام بس، من غير أسماء ولا إيميلات.</p>
+</div>
+<script>
+(function(){
+  var NS='moemnquiz.github.io', API='https://abacus.jasoncameron.dev/';
+  var KEYS=['dl-visits','dl-plants','dl-grow','dl-grow2','dl-grow3','dl-farm','dl-quiz','dl-stick','dl-run','dl-chess',
+            'dl-src-tiktok','dl-src-instagram','dl-src-facebook','dl-src-whatsapp','dl-src-google','dl-src-youtube','dl-src-direct','dl-src-other'];
+  var meta=document.getElementById('meta'), btn=document.getElementById('again');
+  function get(key){
+    return fetch(API+'get/'+NS+'/'+key,{cache:'no-store',mode:'cors'})
+      .then(function(r){return r.json()})
+      .then(function(j){return (j&&typeof j.value==='number')?j.value:null})
+      .catch(function(){return null});
+  }
+  function put(id,n){ var el=document.getElementById(id); if(el) el.textContent=(typeof n==='number')?n:'0'; }
+  function load(){
+    btn.disabled=true;
+    meta.className='note'; meta.textContent='بجيب الأرقام…';
+    Promise.all(KEYS.map(get)).then(function(v){
+      var any=v.some(function(x){return typeof x==='number';});
+      if(!any){
+        meta.className='note err';
+        meta.textContent='العداد مش رادّ دلوقتي. جرّب تاني بعد شوية.';
+        btn.disabled=false; return;
+      }
+      var m={};
+      KEYS.forEach(function(k,i){ m[k]=v[i]; });
+      put('visits',m['dl-visits']);
+      put('plants',m['dl-plants']); put('grow',m['dl-grow']); put('grow2',m['dl-grow2']); put('grow3',m['dl-grow3']);
+      put('farm',m['dl-farm']); put('quiz',m['dl-quiz']); put('stick',m['dl-stick']); put('run',m['dl-run']); put('chess',m['dl-chess']);
+      ['tiktok','instagram','facebook','whatsapp','google','youtube','direct','other'].forEach(function(k){ put('src-'+k,m['dl-src-'+k]); });
+      var dk=['dl-plants','dl-grow','dl-grow2','dl-grow3','dl-farm','dl-quiz','dl-stick','dl-run','dl-chess'];
+      var total=dk.filter(function(k){return typeof m[k]==='number';}).reduce(function(t,k){return t+m[k];},0);
+      document.getElementById('downloads').textContent=total;
+      var now=new Date();
+      meta.className='note';
+      meta.textContent='آخر تحديث: '+now.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'})+' · العداد مجاني ومش بيجمع أي بيانات شخصية.';
+      btn.disabled=false;
+    });
+  }
+  btn.addEventListener('click',load);
+  load();
+})();
+</script>
+</body>
+</html>
